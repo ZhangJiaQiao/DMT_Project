@@ -28,6 +28,9 @@ class BMP_Picture {
 	public:
 		void ReadImage(char* imageName);
 		void WriteImage(string fileName); 
+		void CreateColorImage(); //将图片转化成彩图 
+		void CreateOutlineImage(); //将图片转化为轮廓图 
+		friend void MixColorAndOutline(BMP_Picture Color, BMP_Picture Outline); //将彩图与 
 };
 /*
 bmp文件头  14Bytes
