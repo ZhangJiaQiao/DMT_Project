@@ -9,7 +9,7 @@ using namespace std;
 
 int BYTE_PER_PIXEL = 3; //记录格式为24位bmp格式，每个像素有3bytes 
 int biClrMapBit = 0; //记录调色板位数 
-char* IMAGE_NAME = "90.bmp";
+char* IMAGE_NAME = "90.bmp"; //图片的文件名 
 
 class BMP_Picture {
 	private:
@@ -23,7 +23,7 @@ class BMP_Picture {
 		char biPlanes_biMeter[20]; //记录bmp格式头中biPlanes到biMeter的信息 
 		char biClrImportant[4]; //记录biClrImportant信息 
 		char* biClrMap; //记录调色板
-		char** bitMap; //记录像素矩阵
+		char** bitMap; //---------------------记录像素矩阵--------------------------- 
 		int externWidth; //记录像素矩阵每行保证为32位的倍数而补齐的位数 
 	public:
 		void ReadImage(char* imageName);
