@@ -2,7 +2,7 @@
 
 int main() {
 	BMP_Picture bmp;
-	string fileName = "result.bmp";
+	string fileName = "../Resource/result.bmp";
 	bmp.ReadImage(IMAGE_NAME);
 	bmp.WriteImage(fileName);
 	return 0;

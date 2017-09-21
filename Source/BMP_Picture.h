@@ -9,7 +9,7 @@ using namespace std;
 
 int BYTE_PER_PIXEL = 3; //记录格式为24位bmp格式，每个像素有3bytes 
 int biClrMapBit = 0; //记录调色板位数 
-char* IMAGE_NAME = "samplePicture.bmp"; //图片的文件名 
+char* IMAGE_NAME = "../Resource/samplePicture.bmp"; //图片的文件名 
 
 class BMP_Picture {
 	private:
