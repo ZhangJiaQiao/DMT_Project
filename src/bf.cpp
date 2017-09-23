@@ -4,6 +4,13 @@
 
 bf::bf(const char *img_path) {
     FILE *bitmap = fopen(img_path, "rb");
+
+    if (bitmap == 0) {
+        printf("FILE NOT FOUND.[READ]\n");
+        system("pause");
+        return;
+    }
+
     init_data(bitmap);
     fclose(bitmap);
 }
@@ -11,33 +18,23 @@ bf::bf(const char *img_path) {
 bf::bf(const bf &obj) {
     BITMAPFILEHEADER = obj.BITMAPFILEHEADER;
     BITMAPINFOHEADER = obj.BITMAPINFOHEADER;
-    COLORPALETTE = new int*[(BITMAPFILEHEADER.bfOffBits - 54) / 4];
+    COLORPALETTE = new int[(BITMAPFILEHEADER.bfOffBits - 54) / 4];
     for (int i = 0; i < (BITMAPFILEHEADER.bfOffBits - 54) / 4; i++) {
-        COLORPALETTE[i] = new int[4];
-        for (int j = 0; j < 4; j++)
-            COLORPALETTE[i][j] = obj.COLORPALETTE[i][j];
+            COLORPALETTE[i] = obj.COLORPALETTE[i];
     }
-    BITMAPDATA = new int*[BITMAPINFOHEADER.biHeight];
-    for (int i = 0; i < BITMAPINFOHEADER.biHeight; i++) {
-        BITMAPDATA[i] = new int[BITMAPINFOHEADER.biWidth];
-        for (int j = 0; j < BITMAPINFOHEADER.biWidth; j++)
-            BITMAPDATA[i][j] = obj.BITMAPDATA[i][j];
+    BITMAPDATA = new int[BITMAPINFOHEADER.biHeight * BITMAPINFOHEADER.biWidth];
+    for (int i = 0; i < BITMAPINFOHEADER.biHeight * BITMAPINFOHEADER.biWidth; i++) {
+            BITMAPDATA[i] = obj.BITMAPDATA[i];
     }
 
 }
 
 bf::~bf() {
-    for (int i = 0; i < (BITMAPFILEHEADER.bfOffBits - 54) / 4; i++) {
-        delete[] COLORPALETTE[i];
-    }
     delete[] COLORPALETTE;
-    for (int i = 0; i < BITMAPINFOHEADER.biHeight; i++) {
-        delete[] BITMAPDATA[i];
-    }
     delete[] BITMAPDATA;
 }
 
-int **bf::getBITMAPDATA() const {
+int *bf::getBITMAPDATA() const {
     return BITMAPDATA;
 }
 
@@ -53,9 +50,7 @@ int bf::getLevel() const {
     return (int)pow(2, BITMAPINFOHEADER.biBitCount);
 }
 
-void bf::setBITMAPDATA(int **data) {
-    for (int i = 0; i < BITMAPINFOHEADER.biHeight; i++)
-        delete[] BITMAPDATA[i];
+void bf::setBITMAPDATA(int *data) {
     delete[] BITMAPDATA;
     BITMAPDATA = data;
 }
@@ -96,19 +91,21 @@ void bf::init_data(FILE *bitmap) {
     fread(&BITMAPINFOHEADER.biClrImportant, 1, 4, bitmap);
 
     if (BITMAPFILEHEADER.bfOffBits != 54) {
-        COLORPALETTE = new int*[(BITMAPFILEHEADER.bfOffBits - 54) / 4];
+        COLORPALETTE = new int[(BITMAPFILEHEADER.bfOffBits - 54) / 4];
         for (int i = 0; i < (BITMAPFILEHEADER.bfOffBits - 54) / 4; i++) {
-            COLORPALETTE[i] = new int[4];
-            for (int j = 0; j < 4; j++)
-                fread(&(COLORPALETTE[i][j]), 1, 1, bitmap);
+            fread(&(COLORPALETTE[i]), 4, 1, bitmap);
         }
     }
 
-    BITMAPDATA = new int*[BITMAPINFOHEADER.biHeight];
-    for (int i = 0; i < BITMAPINFOHEADER.biHeight; i++) {
-        BITMAPDATA[i] = new int[BITMAPINFOHEADER.biWidth];
-        for (int j = 0; j < BITMAPINFOHEADER.biWidth; j++)
-            fread(&(BITMAPDATA[i][j]), 1, BITMAPINFOHEADER.biBitCount / 8, bitmap);
+
+    int total_pixel = BITMAPINFOHEADER.biHeight * BITMAPINFOHEADER.biWidth;
+    int bytes_per_pixel = fmax(BITMAPINFOHEADER.biBitCount / 8, 1);
+    int bytes_per_row = ceil(BITMAPINFOHEADER.biWidth * bytes_per_pixel / 4.0) * 4;
+    BITMAPDATA = new int[total_pixel];
+    for (int i = 0; i < total_pixel; i++) {
+        if (i > 0 && i % BITMAPINFOHEADER.biWidth == 0)
+            fseek(bitmap, bytes_per_row - BITMAPINFOHEADER.biWidth * bytes_per_pixel, SEEK_CUR);
+        fread(&(BITMAPDATA[i]), bytes_per_pixel, 1, bitmap);
     }
 }
 
@@ -134,14 +131,17 @@ void bf::output(const char *img_path) {
     fwrite(&BITMAPINFOHEADER.biClrImportant, 1, 4, output);
 
     for (int i = 0; i < (BITMAPFILEHEADER.bfOffBits - 54) / 4; i++) {
-        for (int j = 0; j < 4; j++)
-            fwrite(&(COLORPALETTE[i][j]), 1, 1, output);
+        fwrite(&(COLORPALETTE[i]), 4, 1, output);
     }
 
-    for (int i = 0; i < BITMAPINFOHEADER.biHeight; i++) {
-        int a_width = ceil(BITMAPINFOHEADER.biWidth / 4.0) * 4;
-        for (int j = 0; j < a_width; j++)
-            fwrite(&(BITMAPDATA[i][j]), 1, BITMAPINFOHEADER.biBitCount / 8, output);
+    int total_pixel = BITMAPINFOHEADER.biHeight * BITMAPINFOHEADER.biWidth;
+    int bytes_per_pixel = fmax(BITMAPINFOHEADER.biBitCount / 8, 1);
+    int bytes_per_row = ceil(BITMAPINFOHEADER.biWidth * bytes_per_pixel / 4.0) * 4;
+    int zero = 0;
+    for (int i = 0; i < total_pixel; i++) {
+        fwrite(&(BITMAPDATA[i]), bytes_per_pixel, 1, output);
+        if ((i + 1) % BITMAPINFOHEADER.biWidth == 0)
+            fwrite(&(zero), bytes_per_row - BITMAPINFOHEADER.biWidth * bytes_per_pixel, 1, output);
     }
 
     // 2-Byte zero to align for header.

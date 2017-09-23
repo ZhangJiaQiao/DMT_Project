@@ -4,6 +4,15 @@
 #include <cstdio>
 
 class bf {
+/*  A memory copy of a bitmap image file.
+
+    This class stores both header and body
+    information completely of a bitmap image file
+    with some simple access and I/O functions.
+    Note that all matrices are stored in one-dimension
+    arrays. Maybe reload functions can be written to
+    simplify the pixel-wide access operations in the future.
+*/
 private:
     struct {
         int bfType;
@@ -27,9 +36,18 @@ private:
         int biClrImportant;
     } BITMAPINFOHEADER;  // For windows format.
 
-    int **COLORPALETTE;
+    /*  COLORPALETTE is an array of int, whose single element
+        represents a color with four-byte information (B, G, R
+        and alpha, order from rightmost(LSB) to leftmost(MSB))
+    */
+    int *COLORPALETTE;
 
-    int **BITMAPDATA;
+    /*  BITMAPDATA is an array of int, whose single element
+        represents a single pixel of the bitmap. You can
+        access a pixel in row i, col j (start from 0) like
+        BITMAPDATA[i * width + j]
+    */
+    int *BITMAPDATA;
 
     void init_data(FILE *bitmap);
 
@@ -38,12 +56,12 @@ public:
     bf(const bf &obj);
     ~bf();
 
-    int **getBITMAPDATA() const;
+    int *getBITMAPDATA() const;
     int getHeight() const;
     int getWidth() const;
     int getLevel() const;
 
-    void setBITMAPDATA(int **data);
+    void setBITMAPDATA(int *data);
     void setHeight(int h);
     void setWidth(int w);
     void setBfSize(int s);
