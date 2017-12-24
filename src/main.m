@@ -1,43 +1,20 @@
 % Read image
-imgpath = '../res/lenna.png';
-rgbimg = imread(imgpath);
-grayimg = rgb2gray(rgbimg);
-
-% Determine the value of k
-% hsvimg = rgb2hsv(rgbimg);
-% [freq, val] = imhist(hsvimg(:,:,1));
-% k = 0;
-% thres = 1000;
-% for i = 1:256
-%     if (freq(i) > thres)
-%         k = k + 1;
-%     end
-% end
-
-k = 4;
-
-% Compute kmeans
-[idx, C]= kmeansby(rgbimg, k);
-
-% Choose base colors
-[bc, sbc] = basecolor(C, k);
-
-% Print image with base colors
-colorImg = printcolor(rgbimg, idx, C, bc);
+imgPath = '../res/test5.png';
+rgbImg = imread(imgPath);
+grayImg = rgb2gray(rgbImg);
 
 % Produce noise image
-noiseImg = noise(rgbimg);
+noiseImg = noise(rgbImg);
 % Produce direction image
-directionImg = direction(rgbimg);
+directionImg = direction(rgbImg);
 % Produce texture image
 textureImg = convolution(noiseImg, directionImg);
-
 % Produce outline image
-outlineImg = outline(rgbimg);
+outlineImg = outline(rgbImg);
 
 % Combine images
+resultGrayImg = uint8((double(textureImg) + double(outlineImg) + double(grayImg)) ./ 3);
 textureImg = repmat(double(textureImg), 1, 1, 3);
 outlineImg = repmat(double(outlineImg), 1, 1, 3);
-colorImg = double(colorImg);
-resultImg = uint8((textureImg + outlineImg + colorImg) ./ 3);
+resultImg = uint8((textureImg + outlineImg + double(rgbImg)) ./ 3);
 
